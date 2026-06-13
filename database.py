@@ -1,6 +1,5 @@
 import sqlite3
 import os
-from datetime import datetime
 
 DB_PATH = os.environ.get("DB_PATH", "heartline.db")
 
@@ -14,12 +13,13 @@ class Database:
     def _create_tables(self):
         self.conn.executescript("""
             CREATE TABLE IF NOT EXISTS users (
-                id          INTEGER PRIMARY KEY,
-                first_name  TEXT,
-                username    TEXT,
-                city        TEXT DEFAULT '',
-                send_mode   TEXT DEFAULT 'auto',
-                created_at  TEXT DEFAULT CURRENT_TIMESTAMP
+                id            INTEGER PRIMARY KEY,
+                first_name    TEXT,
+                username      TEXT,
+                city          TEXT DEFAULT '',
+                send_mode     TEXT DEFAULT 'preview',
+                location_mode TEXT DEFAULT 'manual',
+                created_at    TEXT DEFAULT CURRENT_TIMESTAMP
             );
 
             CREATE TABLE IF NOT EXISTS recipients (
@@ -47,7 +47,6 @@ class Database:
         """)
         self.conn.commit()
 
-    # ── USERS ──────────────────────────────────
     def save_user(self, user_id, first_name, username):
         self.conn.execute("""
             INSERT INTO users (id, first_name, username)
@@ -76,7 +75,12 @@ class Database:
         )
         self.conn.commit()
 
-    # ── RECIPIENTS ─────────────────────────────
+    def update_location_mode(self, user_id, mode):
+        self.conn.execute(
+            "UPDATE users SET location_mode = ? WHERE id = ?", (mode, user_id)
+        )
+        self.conn.commit()
+
     def add_recipient(self, user_id, name, relation, contact, tone,
                       schedule_days, schedule_time):
         cur = self.conn.execute("""
@@ -111,7 +115,6 @@ class Database:
         )
         self.conn.commit()
 
-    # ── LOG ────────────────────────────────────
     def log_message(self, user_id, recipient_id, text, status="sent"):
         self.conn.execute("""
             INSERT INTO message_log (user_id, recipient_id, message_text, status)
