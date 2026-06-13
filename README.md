@@ -1,3 +1,3 @@
-python-telegram-bot==20.7
-apscheduler==3.10.4
-httpx==0.25.2
+# HeartLine Bot
+
+Telegram bot for automated personal messages to loved ones.
